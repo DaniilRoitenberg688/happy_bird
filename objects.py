@@ -1,8 +1,11 @@
-import pygame
 from random import randrange
-from constants import *
+
+import pygame.draw
+
 from functions import *
 from groups import *
+
+from constants import *
 
 
 def load_image(name, colorkey=None):
@@ -23,6 +26,14 @@ def load_image(name, colorkey=None):
     else:
         image = image.convert_alpha()
     return image
+
+
+def create_running_enemy(player_y):
+    random = randrange(1, 101)
+    if random % 3 == 0:
+        HealthRunningEnemy(health_enemies, player_y)
+        return
+    RunningEnemy(enemies_group, player_y)
 
 
 class TubeUp(pygame.sprite.Sprite):
@@ -103,15 +114,12 @@ class Player(pygame.sprite.Sprite):
 
         self.hp = 3
 
-
-
     def update(self, *args, **kwargs):
         keys = args[0]
 
         if not self.is_cheat:
 
-            if keys[pygame.K_UP]:
-                self.image = self.sprites[1]
+            if keys[pygame.K_w] or keys[pygame.K_UP]:
                 self.is_jump = 5
                 self.gravity = 4
 
@@ -130,12 +138,6 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y -= 4
             if keys[pygame.K_DOWN]:
                 self.rect.y += 4
-
-        if not self.is_cheat and (
-                pygame.sprite.spritecollideany(self, tube_group) or
-                pygame.sprite.spritecollideany(self, enemies_group) or
-                pygame.sprite.spritecollideany(self, enemy_piu_group)):
-            self.hp -= 1
 
     def shot(self, group):
         Piu(group=group, x=self.rect.x + 5, y=self.rect.y)
@@ -270,7 +272,7 @@ class PiuingEnemy(pygame.sprite.Sprite):
                     self.piu_or_not = False
 
                 elif self.wait_counter == 25 and not self.piu_or_not:
-                    EnemyPiu(enemy_piu_group, self.rect.x, self.rect.y + 10)
+                    self.shot(self.rect.x, self.rect.y + 10)
                     self.piu_or_not = True
 
                 else:
@@ -280,6 +282,12 @@ class PiuingEnemy(pygame.sprite.Sprite):
                     self.rect.y += self.speed
                 else:
                     self.rect.y -= self.speed
+
+    def shot(self, x, y):
+        if randrange(1, 101) % 3 == 0:
+            AddPatronsPiu(add_patrons_group, x, y)
+            return
+        EnemyPiu(enemy_piu_group, x, y)
 
 
 class EnemyPiu(pygame.sprite.Sprite):
@@ -308,3 +316,10 @@ class HealthRunningEnemy(RunningEnemy):
         super().__init__(group, y)
 
         pygame.draw.circle(self.image, KING_FUCHSIA, (15, 15), 15)
+
+
+class AddPatronsPiu(EnemyPiu):
+    def __init__(self, group, x, y):
+        super().__init__(group, x, y)
+
+        pygame.draw.circle(self.image, MINT, (10, 10), 10)

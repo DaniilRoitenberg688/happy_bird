@@ -1,6 +1,9 @@
 import pygame.sprite
 
+from constants import *
 from functions import *
+
+from random import randrange
 
 
 def main():
@@ -27,8 +30,15 @@ def main():
     is_piu_enemy = False
 
     heart_image = load_image('heart.png', -1)
-
     background = load_image('space.png')
+
+    wait_piu_enemy = randrange(500, 1000)
+    wait_wall = randrange(50, 150)
+    wait_running_enemy = randrange(150, 250)
+
+    piu_enemy_life = 0
+
+    could_we_spawn_running_enemy = True
 
     while running:
         screen.blit(background, (0, 0))
@@ -45,6 +55,8 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     player.is_cheat = not player.is_cheat
 
+
+
         counter_for_walls += 1
         counter_for_enemies += 1
         piu_enemy_counter += 1
@@ -52,44 +64,63 @@ def main():
         if player.hp <= 0:
             running = False
 
-        if piu_enemy_counter == 500:
+        if is_piu_enemy and piu_enemy_life <= 100:
+            piu_enemy_life += 1
+
+        if piu_enemy_life >= 100 and not could_we_spawn_running_enemy:
+            could_we_spawn_running_enemy = True
+            counter_for_enemies = 0
+            piu_enemy_life = 0
+
+        if piu_enemy_counter == wait_piu_enemy:
             piu_enemy = PiuingEnemy(enemies_group, player.rect.y)
             is_piu_enemy = True
+            could_we_spawn_running_enemy = False
 
         if is_piu_enemy and piu_enemy.hp == 0:
             is_piu_enemy = False
+            could_we_spawn_running_enemy = True
             piu_enemy_counter = 0
             counter_for_enemies = 50
+            piu_enemy_life = 0
+            wait_piu_enemy = randrange(500, 1000)
 
-        if counter_for_walls == 100:
+        if counter_for_walls == wait_wall:
             new_tube(tube_group, empty_tubes)
             counter_for_walls = 0
+            wait_wall = randrange(50, 150)
 
-        if counter_for_enemies == 150 and not is_piu_enemy:
+        if could_we_spawn_running_enemy and counter_for_enemies == wait_running_enemy:
             create_running_enemy(player.rect.y)
             counter_for_enemies = 0
+            wait_running_enemy = randrange(150, 250)
 
         is_collide_tube = pygame.sprite.spritecollideany(player, tube_group)
         is_collide_enemy = pygame.sprite.spritecollideany(player, enemies_group)
         is_collide_piu = pygame.sprite.spritecollideany(player, enemy_piu_group)
         is_collide_health_enemy = pygame.sprite.spritecollideany(player, health_enemies)
+        is_collide_add_patrons = pygame.sprite.spritecollideany(player, add_patrons_group)
 
         if not player.is_cheat:
             if is_collide_tube:
                 player.hp = 0
 
             if is_collide_enemy:
-                player.hp -= 1
                 is_collide_enemy.kill()
+                player.hp -= 1
 
             if is_collide_piu:
-                player.hp -= 1
                 is_collide_piu.kill()
+                player.hp -= 1
 
             if is_collide_health_enemy:
-                if player.hp < 3:
+                if player.hp < 5:
                     player.hp += 1
                 is_collide_health_enemy.kill()
+
+            if is_collide_add_patrons:
+                is_collide_add_patrons.kill()
+                player.patrons += 1
 
         empty_tube = pygame.sprite.spritecollideany(player, empty_tubes)
         if empty_tube:
@@ -98,8 +129,8 @@ def main():
             if points and points % 3 == 0:
                 player.patrons += 1
 
-        points_text = font_for_points.render(str(points), True, BLACK)
-        patrons_text = font_for_patrons.render(str(player.patrons), True, BLACK)
+        points_text = font_for_points.render(str(points), True, WHITE)
+        patrons_text = font_for_patrons.render(str(player.patrons), True, WHITE)
 
         tube_group.update()
         player_group.update(keys)
@@ -107,6 +138,7 @@ def main():
         health_enemies.update(piu_group)
         piu_group.update()
         enemy_piu_group.update()
+        add_patrons_group.update()
         empty_tubes.update()
 
         tube_group.draw(screen)
@@ -115,9 +147,10 @@ def main():
         health_enemies.draw(screen)
         piu_group.draw(screen)
         enemy_piu_group.draw(screen)
+        add_patrons_group.draw(screen)
         empty_tubes.draw(screen)
 
-        draw_hears(screen, player.hp, heart_image)
+        draw_hearts(screen, player.hp, heart_image)
 
         screen.blit(points_text, (0, 0))
         screen.blit(patrons_text, (450, 0))
