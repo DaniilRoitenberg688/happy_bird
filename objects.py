@@ -1,9 +1,28 @@
+import pygame
 from random import randrange
-
-import pygame.sprite
-
 from constants import *
+from functions import *
 from groups import *
+
+
+def load_image(name, colorkey=None):
+    """Функция для загрузки изображения"""
+    fullname = os.path.join('data/images', name)
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+
+    image = pygame.image.load(fullname)
+
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 class TubeUp(pygame.sprite.Sprite):
@@ -58,9 +77,14 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, group):
         super().__init__(group)
 
-        self.image = pygame.Surface((20, 20), pygame.SRCALPHA)
-        self.image = self.image.convert_alpha()
-        pygame.draw.circle(self.image, GOLD, (10, 10), 10)
+        # self.image = pygame.Surface((20, 20), pygame.SRCALPHA)
+        # self.image = self.image.convert_alpha()
+        # pygame.draw.circle(self.image, GOLD, (10, 10), 10)
+
+        self.sprites = [load_image('spaceship.png', -1)]
+        self.sprites.append(pygame.transform.rotate(self.sprites[0], 30))
+
+        self.image = load_image('spaceship.png', -1)
 
         self.rect = self.image.get_rect()
 
@@ -79,12 +103,15 @@ class Player(pygame.sprite.Sprite):
 
         self.hp = 3
 
+
+
     def update(self, *args, **kwargs):
         keys = args[0]
 
         if not self.is_cheat:
 
             if keys[pygame.K_UP]:
+                self.image = self.sprites[1]
                 self.is_jump = 5
                 self.gravity = 4
 
@@ -93,6 +120,7 @@ class Player(pygame.sprite.Sprite):
                 self.is_jump -= 1
 
             if not self.is_jump:
+                self.image = self.sprites[0]
                 self.gravity = 5
 
             self.rect.y += self.gravity
@@ -106,7 +134,7 @@ class Player(pygame.sprite.Sprite):
         if not self.is_cheat and (
                 pygame.sprite.spritecollideany(self, tube_group) or
                 pygame.sprite.spritecollideany(self, enemies_group) or
-                pygame.sprite.spritecollideany(self, enemy_piu)):
+                pygame.sprite.spritecollideany(self, enemy_piu_group)):
             self.hp -= 1
 
     def shot(self, group):
@@ -114,7 +142,7 @@ class Player(pygame.sprite.Sprite):
         self.patrons -= 1
 
 
-class FirstEnemy(pygame.sprite.Sprite):
+class RunningEnemy(pygame.sprite.Sprite):
     def __init__(self, group, y):
         super().__init__(group)
 
@@ -169,7 +197,7 @@ class Piu(pygame.sprite.Sprite):
             self.kill()
             sprite.hp -= 1
 
-        enemies_piu = pygame.sprite.spritecollideany(self, enemy_piu)
+        enemies_piu = pygame.sprite.spritecollideany(self, enemy_piu_group)
         if enemies_piu:
             self.speed *= -1
             enemies_piu.speed *= -1
@@ -198,7 +226,7 @@ class EmptyTube(pygame.sprite.Sprite):
             self.kill()
 
 
-class SecondEnemy(pygame.sprite.Sprite):
+class PiuingEnemy(pygame.sprite.Sprite):
     def __init__(self, group, y):
         super().__init__(group)
 
@@ -242,7 +270,7 @@ class SecondEnemy(pygame.sprite.Sprite):
                     self.piu_or_not = False
 
                 elif self.wait_counter == 25 and not self.piu_or_not:
-                    EnemyPiu(enemy_piu, self.rect.x, self.rect.y + 10)
+                    EnemyPiu(enemy_piu_group, self.rect.x, self.rect.y + 10)
                     self.piu_or_not = True
 
                 else:
@@ -273,3 +301,10 @@ class EnemyPiu(pygame.sprite.Sprite):
         self.rect.x -= self.speed
         if self.rect.x < 50:
             self.kill()
+
+
+class HealthRunningEnemy(RunningEnemy):
+    def __init__(self, group, y):
+        super().__init__(group, y)
+
+        pygame.draw.circle(self.image, KING_FUCHSIA, (15, 15), 15)

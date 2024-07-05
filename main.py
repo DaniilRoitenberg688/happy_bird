@@ -1,53 +1,6 @@
-from random import randrange
-import os
-import sys
+import pygame.sprite
 
-from constants import *
-from groups import *
-from objects import TubeUp, TubeDown, Player, FirstEnemy, EmptyTube, SecondEnemy
-
-
-def new_tube(group, empty):
-    up = TubeUp(speed=-2, group=group)
-    between = randrange(100, 350)
-    TubeDown(speed=-2, group=group, between=between, high_up=up.rect.size[-1])
-    EmptyTube(speed=-2, group=empty, high=between, y=up.rect.size[-1])
-
-
-def load_image(name, colorkey=None):
-    """Функция для загрузки изображения"""
-    fullname = os.path.join(name)
-    # если файл не существует, то выходим
-    if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
-
-    image = pygame.image.load(fullname)
-
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-    return image
-
-
-def draw_hears(screen: pygame.display, col, image):
-    if col == 1:
-        screen.blit(image, (235, 0))
-
-    if col == 2:
-        screen.blit(image, (212, 0))
-        screen.blit(image, (248, 0))
-
-    if col == 3:
-        screen.blit(image, (195, 0))
-        screen.blit(image, (235, 0))
-        screen.blit(image, (275, 0))
-
-
+from functions import *
 
 
 def main():
@@ -70,13 +23,15 @@ def main():
     font_for_patrons = pygame.font.Font(None, 65)
 
     piu_enemy = 0
-    piu_counter = 0
+    piu_enemy_counter = 0
     is_piu_enemy = False
 
     heart_image = load_image('heart.png', -1)
 
+    background = load_image('space.png')
+
     while running:
-        screen.fill(SKY_BLUE)
+        screen.blit(background, (0, 0))
 
         for event in pygame.event.get():
             keys = pygame.key.get_pressed()
@@ -92,33 +47,49 @@ def main():
 
         counter_for_walls += 1
         counter_for_enemies += 1
-        piu_counter += 1
+        piu_enemy_counter += 1
 
         if player.hp <= 0:
             running = False
 
-        if piu_counter == 500:
-            piu_enemy = SecondEnemy(enemies_group, player.rect.y)
+        if piu_enemy_counter == 500:
+            piu_enemy = PiuingEnemy(enemies_group, player.rect.y)
             is_piu_enemy = True
 
         if is_piu_enemy and piu_enemy.hp == 0:
             is_piu_enemy = False
-            piu_counter = 0
+            piu_enemy_counter = 0
             counter_for_enemies = 50
-
-        print(is_piu_enemy)
 
         if counter_for_walls == 100:
             new_tube(tube_group, empty_tubes)
             counter_for_walls = 0
 
         if counter_for_enemies == 150 and not is_piu_enemy:
-            FirstEnemy(group=enemies_group, y=player.rect.y)
+            create_running_enemy(player.rect.y)
             counter_for_enemies = 0
 
-        # if not player.is_cheat and (pygame.sprite.spritecollideany(player, tube_group) or pygame.sprite.spritecollideany(player, enemies_group)\
-        #         or pygame.sprite.spritecollideany(player, enemy_piu)):
-        #     player.hp -= 1
+        is_collide_tube = pygame.sprite.spritecollideany(player, tube_group)
+        is_collide_enemy = pygame.sprite.spritecollideany(player, enemies_group)
+        is_collide_piu = pygame.sprite.spritecollideany(player, enemy_piu_group)
+        is_collide_health_enemy = pygame.sprite.spritecollideany(player, health_enemies)
+
+        if not player.is_cheat:
+            if is_collide_tube:
+                player.hp = 0
+
+            if is_collide_enemy:
+                player.hp -= 1
+                is_collide_enemy.kill()
+
+            if is_collide_piu:
+                player.hp -= 1
+                is_collide_piu.kill()
+
+            if is_collide_health_enemy:
+                if player.hp < 3:
+                    player.hp += 1
+                is_collide_health_enemy.kill()
 
         empty_tube = pygame.sprite.spritecollideany(player, empty_tubes)
         if empty_tube:
@@ -133,15 +104,17 @@ def main():
         tube_group.update()
         player_group.update(keys)
         enemies_group.update(piu_group)
+        health_enemies.update(piu_group)
         piu_group.update()
-        enemy_piu.update()
+        enemy_piu_group.update()
         empty_tubes.update()
 
         tube_group.draw(screen)
         player_group.draw(screen)
         enemies_group.draw(screen)
+        health_enemies.draw(screen)
         piu_group.draw(screen)
-        enemy_piu.draw(screen)
+        enemy_piu_group.draw(screen)
         empty_tubes.draw(screen)
 
         draw_hears(screen, player.hp, heart_image)
