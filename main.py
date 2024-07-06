@@ -1,9 +1,8 @@
+from random import randrange
+
 import pygame.sprite
 
-from constants import *
 from functions import *
-
-from random import randrange
 
 
 def main():
@@ -12,10 +11,11 @@ def main():
 
     running = True
 
-    player = Player(player_group)
+    now_rotation = 2
+
+    player = Player(player_group, now_rotation)
 
     clock = pygame.time.Clock()
-    new_tube(tube_group, empty_tubes)
 
     counter_for_walls = 0
     counter_for_enemies = 0
@@ -33,12 +33,14 @@ def main():
     background = load_image('space.png')
 
     wait_piu_enemy = randrange(500, 1000)
-    wait_wall = randrange(50, 150)
+    wait_wall = randrange(150, 250)
     wait_running_enemy = randrange(150, 250)
 
     piu_enemy_life = 0
 
     could_we_spawn_running_enemy = True
+
+    new_tube(tube_group, empty_tubes, now_rotation)
 
     while running:
         screen.blit(background, (0, 0))
@@ -55,7 +57,13 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     player.is_cheat = not player.is_cheat
 
+                if event.key == pygame.K_0:
+                    kill_everything()
+                    now_rotation = 0
 
+                if event.key == pygame.K_2:
+                    kill_everything()
+                    now_rotation = 2
 
         counter_for_walls += 1
         counter_for_enemies += 1
@@ -73,7 +81,7 @@ def main():
             piu_enemy_life = 0
 
         if piu_enemy_counter == wait_piu_enemy:
-            piu_enemy = PiuingEnemy(enemies_group, player.rect.y)
+            piu_enemy = PiuingEnemy(enemies_group, player.rect.y, now_rotation)
             is_piu_enemy = True
             could_we_spawn_running_enemy = False
 
@@ -86,12 +94,12 @@ def main():
             wait_piu_enemy = randrange(500, 1000)
 
         if counter_for_walls == wait_wall:
-            new_tube(tube_group, empty_tubes)
+            new_tube(tube_group, empty_tubes, now_rotation)
             counter_for_walls = 0
-            wait_wall = randrange(50, 150)
+            wait_wall = randrange(100, 200)
 
         if could_we_spawn_running_enemy and counter_for_enemies == wait_running_enemy:
-            create_running_enemy(player.rect.y)
+            create_running_enemy(player.rect.y, now_rotation)
             counter_for_enemies = 0
             wait_running_enemy = randrange(150, 250)
 
@@ -133,7 +141,7 @@ def main():
         patrons_text = font_for_patrons.render(str(player.patrons), True, WHITE)
 
         tube_group.update()
-        player_group.update(keys)
+        player_group.update(keys, now_rotation)
         enemies_group.update(piu_group)
         health_enemies.update(piu_group)
         piu_group.update()

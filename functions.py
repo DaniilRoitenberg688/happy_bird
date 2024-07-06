@@ -6,12 +6,14 @@ from constants import *
 
 import pygame
 
+from groups import all_sprites
 
-def new_tube(group, empty):
-    up = TubeUp(speed=-2, group=group)
+
+def new_tube(group, empty, rotation):
+    up = TubeUp(speed=-2, group=group, rotation=rotation)
     between = randrange(100, 350)
-    TubeDown(speed=-2, group=group, between=between, high_up=up.rect.size[-1])
-    EmptyTube(speed=-2, group=empty, high=between, y=up.rect.size[-1])
+    TubeDown(speed=-2, group=group, between=between, high_up=up.rect.size[-1], rotation=rotation)
+    EmptyTube(speed=-2, group=empty, high=between, y=up.rect.size[-1], rotation=rotation)
 
 
 def draw_hearts(screen: pygame.display, col, image):
@@ -39,4 +41,9 @@ def draw_hearts(screen: pygame.display, col, image):
         screen.blit(image, (235, 0))
         screen.blit(image, (271, 0))
         screen.blit(image, (307, 0))
+
+
+def kill_everything():
+    for sprite in all_sprites:
+        sprite.kill()
 
