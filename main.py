@@ -2,7 +2,12 @@ from random import randrange
 
 import pygame.sprite
 
-from functions import *
+from functions import new_tube, create_running_enemy, draw_hearts, kill_everything, change_walls_direction
+
+from constants import *
+from objects import Player, load_image, PiuingEnemy
+
+from groups import *
 
 
 def main():
@@ -11,7 +16,7 @@ def main():
 
     running = True
 
-    now_rotation = 2
+    now_rotation = 0
 
     player = Player(player_group, now_rotation)
 
@@ -42,6 +47,12 @@ def main():
 
     new_tube(tube_group, empty_tubes, now_rotation)
 
+    count_spaces = 0
+    count_up_press = 0
+
+    how_much_to_click_up = randrange(20, 40)
+    how_much_to_click_space = randrange(5, 10)
+
     while running:
         screen.blit(background, (0, 0))
 
@@ -53,21 +64,56 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and player.patrons:
                     player.shot(piu_group)
+                    count_spaces += 1
 
                 if event.key == pygame.K_ESCAPE:
                     player.is_cheat = not player.is_cheat
 
-                if event.key == pygame.K_0:
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    count_up_press += 1
+
+                if event.key == pygame.K_0 and now_rotation != 0:
                     kill_everything()
+                    change_walls_direction()
+                    is_piu_enemy = False
+                    piu_enemy_counter = 0
+                    could_we_spawn_running_enemy = True
+                    counter_for_enemies = 0
                     now_rotation = 0
 
-                if event.key == pygame.K_2:
+                if event.key == pygame.K_2 and now_rotation != 2:
                     kill_everything()
+                    change_walls_direction()
+                    is_piu_enemy = False
+                    piu_enemy_counter = 0
+                    could_we_spawn_running_enemy = True
+                    counter_for_enemies = 0
                     now_rotation = 2
 
         counter_for_walls += 1
         counter_for_enemies += 1
         piu_enemy_counter += 1
+
+        if count_up_press >= how_much_to_click_up and count_spaces >= how_much_to_click_space:
+            count_up_press = 0
+            count_spaces = 0
+
+            how_much_to_click_up = randrange(20, 40)
+            how_much_to_click_space = randrange(10, 20)
+
+            kill_everything()
+            change_walls_direction()
+            is_piu_enemy = False
+            piu_enemy_counter = 0
+            could_we_spawn_running_enemy = True
+            counter_for_enemies = 0
+
+            if now_rotation == 0:
+                now_rotation = 2
+            else:
+                now_rotation = 0
+
+
 
         if player.hp <= 0:
             running = False
@@ -162,6 +208,8 @@ def main():
 
         screen.blit(points_text, (0, 0))
         screen.blit(patrons_text, (450, 0))
+
+        print('Добавить стену, чтобы птичка могла почилить')
 
         pygame.display.update()
 

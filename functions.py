@@ -6,7 +6,7 @@ from constants import *
 
 import pygame
 
-from groups import all_sprites
+from groups import enemies_group, enemy_piu_group, tube_group, empty_tubes
 
 
 def new_tube(group, empty, rotation):
@@ -44,6 +44,19 @@ def draw_hearts(screen: pygame.display, col, image):
 
 
 def kill_everything():
-    for sprite in all_sprites:
+    for sprite in enemies_group:
         sprite.kill()
+
+    for sprite in enemy_piu_group:
+        sprite.kill()
+
+
+def change_walls_direction():
+    for sprite in tube_group:
+        sprite.speed_x *= -1
+
+    for sprite in empty_tubes:
+        sprite.speed_x *= -1
+
+
 

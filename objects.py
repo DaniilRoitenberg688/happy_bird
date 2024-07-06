@@ -178,6 +178,10 @@ class RunningEnemy(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
+        self.right_image = self.image
+
+        self.degree = 0
+
         if rotation == 0:
             self.rect.x = 500
             self.rect.y = y
@@ -201,6 +205,9 @@ class RunningEnemy(pygame.sprite.Sprite):
 
         if not self.hp:
             self.kill()
+
+        self.degree += 1
+        self.image = pygame.transform.rotate(self.right_image, -self.degree)
 
 
 class Piu(pygame.sprite.Sprite):
@@ -380,7 +387,23 @@ class HealthRunningEnemy(RunningEnemy):
     def __init__(self, group, y, rotation):
         super().__init__(group, y, rotation)
 
-        pygame.draw.circle(self.image, KING_FUCHSIA, (15, 15), 15)
+        self.image = load_image(f'heart_{rotation}.png')
+        self.rect = self.image.get_rect()
+
+        self.rect.y = y
+
+        if rotation == 0:
+            self.rect.x = 500
+            self.speed = -5
+        else:
+            self.rect.x = 0
+            self.speed = 5
+
+    def update(self, *args, **kwargs):
+        self.rect.x += self.speed
+        group = args[0]
+        if self.rect.x < 0 or self.rect.x > 500:
+            self.kill()
 
 
 class AddPatronsPiu(EnemyPiu):
@@ -388,3 +411,19 @@ class AddPatronsPiu(EnemyPiu):
         super().__init__(group, x, y, speed)
 
         pygame.draw.circle(self.image, MINT, (10, 10), 10)
+
+
+# class Portal(pygame.sprite.Sprite):
+#     def __init__(self, group, x, y, rotation):
+#
+#         super().__init__(group, all_sprites)
+#
+#         self.image = load_image('portal.png')
+#
+#         self.rect = self.image.get_rect()
+#
+#         self.rect.x = x
+#         self.rect.y = y
+#
+#
+#     def update(self, *args, **kwargs):
