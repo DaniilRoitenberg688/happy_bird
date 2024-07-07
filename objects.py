@@ -41,23 +41,22 @@ class TubeUp(pygame.sprite.Sprite):
         super().__init__(all_sprites, group)
 
         if rotation == 0 or rotation == 2:
-            self.image = pygame.Surface((50, randrange(50, 300)))
-
+            self.image = load_image('tube.png')
         self.rotation = rotation
 
         self.rect = self.image.get_rect()
 
-        self.image.fill(GREEN)
+        self.random_pos = randrange(50, 350)
 
         if self.rotation == 0:
             self.rect.x = 500
-            self.rect.y = 0
+            self.rect.y = self.random_pos - 375
             self.speed_x = speed
             self.speed_y = 0
 
         if self.rotation == 2:
             self.rect.x = -50
-            self.rect.y = 0
+            self.rect.y = self.random_pos - 375
             self.speed_x = -speed
             self.speed_y = 0
 
@@ -81,9 +80,7 @@ class TubeDown(pygame.sprite.Sprite):
         self.rotation = rotation
 
         if rotation == 0 or rotation == 2:
-            self.image = pygame.Surface((50, SIZE - between - high_up))
-
-        self.image.fill(GREEN)
+            self.image = load_image('tube.png')
 
         self.rect = self.image.get_rect()
 
@@ -114,9 +111,15 @@ class Player(pygame.sprite.Sprite):
         # self.image = self.image.convert_alpha()
         # pygame.draw.circle(self.image, GOLD, (10, 10), 10)
 
-        self.sprites = [load_image(f'spaceship_{0}.png', -1), '', load_image(f'spaceship_{2}.png', -1)]
+        self.sprites = [load_image(f'bird/bird_0.png'), load_image(f'bird/bird_1.png'), load_image(f'bird/bird_2.png'),
+                        load_image(f'bird/bird_3.png')]
 
-        self.image = load_image(f'spaceship_{rotation}.png', -1)
+        self.flipped_sprites = []
+
+        for image in self.sprites:
+            self.flipped_sprites.append(pygame.transform.flip(image, False, True))
+
+        self.image = self.sprites[0]
 
         self.rect = self.image.get_rect()
 
@@ -131,31 +134,47 @@ class Player(pygame.sprite.Sprite):
 
         self.counter = 0
 
-        self.gravity = 5
+        self.gravity = -5
 
         self.is_cheat = False
 
         self.hp = 3
 
+        self.up_or_down = 1
+
     def update(self, *args, **kwargs):
         keys = args[0]
         rotation = args[1]
-        self.rotation = rotation
 
-        self.image = self.sprites[rotation]
+        if self.rotation != rotation:
+            for i in range(len(self.sprites)):
+                self.sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
+                self.flipped_sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
+
+        self.rotation = rotation
 
         if not self.is_cheat:
 
             if keys[pygame.K_w] or keys[pygame.K_UP]:
                 self.is_jump = 5
-                self.gravity = 4
+                self.gravity = 4 * self.up_or_down
 
             if self.is_jump:
-                self.rect.y -= self.is_jump * 2
+                self.rect.y -= self.is_jump * 2 * self.up_or_down
                 self.is_jump -= 1
 
+                if self.is_jump == 4:
+                    self.image = self.sprites[1]
+
+                if self.is_jump == 3:
+                    self.image = self.sprites[2]
+
+                if self.is_jump == 1 or self.is_jump == 2:
+                    self.image = self.sprites[3]
+
             if not self.is_jump:
-                self.gravity = 5
+                self.gravity = 5 * self.up_or_down
+                self.image = self.sprites[0]
 
             self.rect.y += self.gravity
 
@@ -174,13 +193,24 @@ class RunningEnemy(pygame.sprite.Sprite):
     def __init__(self, group, y, rotation):
         super().__init__(all_sprites, group)
 
-        self.image = load_image('asteroid.png', -1)
+        self.sprites = [load_image('fb/fb0.png'), load_image('fb/fb1.png'), load_image('fb/fb2.png'),
+                        load_image('fb/fb3.png'), load_image('fb/fb4.png')]
+
+        if rotation == 0:
+            for i in range(len(self.sprites)):
+                self.sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
+
+        self.image = self.sprites[0]
 
         self.rect = self.image.get_rect()
 
         self.right_image = self.image
 
         self.degree = 0
+
+        self.current_image = 0
+
+        self.rotation = rotation
 
         if rotation == 0:
             self.rect.x = 500
@@ -196,27 +226,32 @@ class RunningEnemy(pygame.sprite.Sprite):
 
     def update(self, *args, **kwargs):
         self.rect.x += self.speed
-        group = args[0]
+        rotation = args[0]
+        if self.rotation != rotation:
+            self.rotation = rotation
+            for i in range(len(self.sprites)):
+                self.sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
+
+        if self.current_image % 5 == 0:
+            self.image = self.sprites[self.current_image // 5]
+
         if self.rect.x < 0 or self.rect.x > 500:
             self.kill()
 
-        if pygame.sprite.spritecollideany(self, group):
-            self.hp -= 1
-
-        if not self.hp:
-            self.kill()
-
-        self.degree += 1
-        self.image = pygame.transform.rotate(self.right_image, -self.degree)
+        self.current_image += 1
+        if self.current_image > 20:
+            self.current_image = 0
 
 
 class Piu(pygame.sprite.Sprite):
     def __init__(self, group, x, y, rotation):
         super().__init__(all_sprites, group)
 
-        self.image = pygame.Surface((12, 12), pygame.SRCALPHA)
-        self.image = self.image.convert_alpha()
-        pygame.draw.circle(self.image, GOLD, (6, 6), 6)
+        # self.image = pygame.Surface((12, 12), pygame.SRCALPHA)
+        # self.image = self.image.convert_alpha()
+        # pygame.draw.circle(self.image, GOLD, (6, 6), 6)
+
+        self.image = load_image('red.png')
 
         self.rect = self.image.get_rect()
 
@@ -229,6 +264,8 @@ class Piu(pygame.sprite.Sprite):
         if rotation == 2:
             self.speed = -7
 
+            self.image = pygame.transform.flip(self.image, True, False)
+
     def update(self, *args, **kwargs):
         self.rect.x += self.speed
         if self.rect.x > 500 or self.speed < -50:
@@ -237,7 +274,6 @@ class Piu(pygame.sprite.Sprite):
         sprite = pygame.sprite.spritecollideany(self, enemies_group)
         if sprite:
             self.kill()
-            sprite.hp -= 1
 
         enemies_piu = pygame.sprite.spritecollideany(self, enemy_piu_group)
         if enemies_piu:
@@ -282,9 +318,11 @@ class PiuingEnemy(pygame.sprite.Sprite):
     def __init__(self, group, y, rotation):
         super().__init__(all_sprites, group)
 
-        self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
-        self.image = self.image.convert_alpha()
-        pygame.draw.circle(self.image, MUSLIM_GREEN, (20, 20), 20)
+        # self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
+        # self.image = self.image.convert_alpha()
+        # pygame.draw.circle(self.image, MUSLIM_GREEN, (20, 20), 20)
+
+        self.image = load_image('enemy.png')
 
         self.rect = self.image.get_rect()
 
@@ -427,3 +465,5 @@ class AddPatronsPiu(EnemyPiu):
 #
 #
 #     def update(self, *args, **kwargs):
+
+

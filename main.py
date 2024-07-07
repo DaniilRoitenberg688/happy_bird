@@ -35,7 +35,7 @@ def main():
     is_piu_enemy = False
 
     heart_image = load_image('heart.png', -1)
-    background = load_image('space.png')
+    background = load_image('background.png')
 
     wait_piu_enemy = randrange(500, 1000)
     wait_wall = randrange(150, 250)
@@ -54,6 +54,7 @@ def main():
     how_much_to_click_space = randrange(5, 10)
 
     while running:
+        screen.fill(SKY_BLUE)
         screen.blit(background, (0, 0))
 
         for event in pygame.event.get():
@@ -188,7 +189,7 @@ def main():
 
         tube_group.update()
         player_group.update(keys, now_rotation)
-        enemies_group.update(piu_group)
+        enemies_group.update(now_rotation)
         health_enemies.update(piu_group)
         piu_group.update()
         enemy_piu_group.update()
@@ -208,8 +209,6 @@ def main():
 
         screen.blit(points_text, (0, 0))
         screen.blit(patrons_text, (450, 0))
-
-        print('Добавить стену, чтобы птичка могла почилить')
 
         pygame.display.update()
 

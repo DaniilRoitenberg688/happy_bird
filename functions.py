@@ -5,15 +5,15 @@ from objects import *
 from constants import *
 
 import pygame
-
+from random import randrange
 from groups import enemies_group, enemy_piu_group, tube_group, empty_tubes
 
 
 def new_tube(group, empty, rotation):
     up = TubeUp(speed=-2, group=group, rotation=rotation)
-    between = randrange(100, 350)
-    TubeDown(speed=-2, group=group, between=between, high_up=up.rect.size[-1], rotation=rotation)
-    EmptyTube(speed=-2, group=empty, high=between, y=up.rect.size[-1], rotation=rotation)
+    between = randrange(100, 250)
+    TubeDown(speed=-2, group=group, between=between, high_up=up.random_pos, rotation=rotation)
+    EmptyTube(speed=-2, group=empty, high=between, y=up.random_pos, rotation=rotation)
 
 
 def draw_hearts(screen: pygame.display, col, image):
