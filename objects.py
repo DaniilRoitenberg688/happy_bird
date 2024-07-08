@@ -145,6 +145,8 @@ class Player(pygame.sprite.Sprite):
 
         self.is_alive = True
 
+        self.current_image = 0
+
     def update(self, *args, **kwargs):
         keys = args[0]
         rotation = args[1]
@@ -157,21 +159,26 @@ class Player(pygame.sprite.Sprite):
 
             self.rotation = rotation
 
+            if self.current_image % 10 == 0:
+                self.image = self.sprites[self.current_image // 7]
+
+            if self.current_image > 20:
+                self.current_image = 0
+
+            self.current_image += 1
+
             if not self.is_cheat:
 
                 if keys[pygame.K_w] or keys[pygame.K_UP]:
                     self.is_jump = 5
                     self.gravity = 3 * self.up_or_down
-                    self.image = self.sprites[2]
 
                 if self.is_jump:
                     self.rect.y -= self.is_jump * 2 * self.up_or_down
                     self.is_jump -= 1
-                    self.image = self.sprites[1]
 
                 if not self.is_jump:
                     self.gravity = 5 * self.up_or_down
-                    self.image = self.sprites[0]
 
                 self.rect.y += self.gravity
 
@@ -180,10 +187,6 @@ class Player(pygame.sprite.Sprite):
                     self.rect.y -= 4
                 if keys[pygame.K_DOWN]:
                     self.rect.y += 4
-
-        else:
-            self.gravity = 7
-            self.rect.y += self.gravity
 
     def shot(self, group):
         Piu(group=group, x=self.rect.x + 5, y=self.rect.y, rotation=self.rotation)

@@ -6,7 +6,7 @@ from constants import *
 
 import pygame
 from random import randrange
-from groups import enemies_group, enemy_piu_group, tube_group, empty_tubes
+from groups import *
 
 
 def new_tube(group, empty, rotation):
@@ -55,6 +55,55 @@ def change_walls_direction():
 
     for sprite in empty_tubes:
         sprite.speed_x *= -1
+
+
+def draw_win_menu(screen, x, y, points):
+
+    font_for_lose = pygame.font.Font('data/fonts/FlappyBirdRegular.ttf', 100)
+    press_any_key = pygame.font.Font('data/fonts/FlappyBirdRegular.ttf', 50)
+    font_for_points = pygame.font.Font('data/fonts/FlappyBirdRegular.ttf', 200)
+
+    lose_text = font_for_lose.render('YOU LOSE', True, RED)
+    press_any_key_text = press_any_key.render('PRESS ANY KEY', True, GREY)
+    text = str(points)
+    points_text = font_for_points.render(text, True, BLACK)
+    size = points_text.get_size()
+
+    pygame.draw.rect(screen, PLATINUM, (x, y, 400, 400))
+    screen.blit(lose_text, (x + (200 - lose_text.get_size()[0] // 2), y + 30))
+    screen.blit(points_text, (x + (200 - size[0] // 2), y + 120))
+    screen.blit(press_any_key_text, (x + (200 - press_any_key_text.get_size()[0] // 2), y + 320))
+
+
+def clear():
+    for i in tube_group:
+        i.kill()
+
+    for i in player_group:
+        i.kill()
+
+    for i in enemies_group:
+        i.kill()
+
+    for i in piu_group:
+        i.kill()
+
+    for i in empty_tubes:
+        i.kill()
+
+    for i in enemy_piu_group:
+        i.kill()
+
+    for i in health_enemies:
+        i.kill()
+
+    for i in add_patrons_group:
+        i.kill()
+
+    for i in all_sprites:
+        i.kill()
+
+
 
 
 
