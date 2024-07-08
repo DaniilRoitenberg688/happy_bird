@@ -1,7 +1,7 @@
 import os
 import sys
 
-from objects import *
+from objects import PiuingEnemy, TubeUp, TubeDown, EmptyTube
 from constants import *
 
 import pygame
@@ -45,10 +45,8 @@ def draw_hearts(screen: pygame.display, col, image):
 
 def kill_everything():
     for sprite in enemies_group:
-        sprite.kill()
-
-    for sprite in enemy_piu_group:
-        sprite.kill()
+        if type(sprite) != PiuingEnemy:
+            sprite.kill()
 
 
 def change_walls_direction():

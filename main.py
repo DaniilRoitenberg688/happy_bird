@@ -2,10 +2,10 @@ from random import randrange
 
 import pygame.sprite
 
-from functions import new_tube, create_running_enemy, draw_hearts, kill_everything, change_walls_direction
+from functions import new_tube, draw_hearts, kill_everything, change_walls_direction
 
 from constants import *
-from objects import Player, load_image, PiuingEnemy
+from objects import Player, load_image, PiuingEnemy, create_running_enemy
 
 from groups import *
 
@@ -53,6 +53,10 @@ def main():
     how_much_to_click_up = randrange(20, 40)
     how_much_to_click_space = randrange(5, 10)
 
+    count_to_change_gravity = randrange(10, 20)
+
+    show_end_table = 0
+
     while running:
         screen.fill(SKY_BLUE)
         screen.blit(background, (0, 0))
@@ -76,8 +80,10 @@ def main():
                 if event.key == pygame.K_0 and now_rotation != 0:
                     kill_everything()
                     change_walls_direction()
+                    if is_piu_enemy:
+                        piu_enemy.is_killed = True
+                        piu_enemy_counter = wait_piu_enemy - 50
                     is_piu_enemy = False
-                    piu_enemy_counter = 0
                     could_we_spawn_running_enemy = True
                     counter_for_enemies = 0
                     now_rotation = 0
@@ -85,8 +91,10 @@ def main():
                 if event.key == pygame.K_2 and now_rotation != 2:
                     kill_everything()
                     change_walls_direction()
+                    if is_piu_enemy:
+                        piu_enemy.is_killed = True
+                        piu_enemy_counter = wait_piu_enemy - 50
                     is_piu_enemy = False
-                    piu_enemy_counter = 0
                     could_we_spawn_running_enemy = True
                     counter_for_enemies = 0
                     now_rotation = 2
@@ -104,8 +112,10 @@ def main():
 
             kill_everything()
             change_walls_direction()
+            if is_piu_enemy:
+                piu_enemy.is_killed = True
             is_piu_enemy = False
-            piu_enemy_counter = 0
+            piu_enemy_counter = wait_piu_enemy - 50
             could_we_spawn_running_enemy = True
             counter_for_enemies = 0
 
@@ -114,10 +124,8 @@ def main():
             else:
                 now_rotation = 0
 
-
-
         if player.hp <= 0:
-            running = False
+            player.is_alive = False
 
         if is_piu_enemy and piu_enemy_life <= 100:
             piu_enemy_life += 1
@@ -184,17 +192,22 @@ def main():
             if points and points % 3 == 0:
                 player.patrons += 1
 
+        if not player.is_alive and player.rect.y >= 480:
+            show_end_table = True
+
         points_text = font_for_points.render(str(points), True, WHITE)
         patrons_text = font_for_patrons.render(str(player.patrons), True, WHITE)
 
-        tube_group.update()
-        player_group.update(keys, now_rotation)
-        enemies_group.update(now_rotation)
-        health_enemies.update(piu_group)
-        piu_group.update()
-        enemy_piu_group.update()
-        add_patrons_group.update()
-        empty_tubes.update()
+        if not show_end_table:
+            player_group.update(keys, now_rotation)
+            if player.is_alive:
+                tube_group.update()
+                enemies_group.update(now_rotation)
+                health_enemies.update(piu_group)
+                piu_group.update()
+                enemy_piu_group.update(now_rotation)
+                add_patrons_group.update()
+                empty_tubes.update()
 
         tube_group.draw(screen)
         player_group.draw(screen)

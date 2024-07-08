@@ -111,8 +111,9 @@ class Player(pygame.sprite.Sprite):
         # self.image = self.image.convert_alpha()
         # pygame.draw.circle(self.image, GOLD, (10, 10), 10)
 
-        self.sprites = [load_image(f'bird/bird_0.png'), load_image(f'bird/bird_1.png'), load_image(f'bird/bird_2.png'),
-                        load_image(f'bird/bird_3.png')]
+        self.sprites = [load_image('bird/0.png'),
+                        load_image('bird/1.png'),
+                        load_image('bird/2.png')]
 
         self.flipped_sprites = []
 
@@ -142,47 +143,47 @@ class Player(pygame.sprite.Sprite):
 
         self.up_or_down = 1
 
+        self.is_alive = True
+
     def update(self, *args, **kwargs):
         keys = args[0]
         rotation = args[1]
 
-        if self.rotation != rotation:
-            for i in range(len(self.sprites)):
-                self.sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
-                self.flipped_sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
+        if self.is_alive:
+            if self.rotation != rotation:
+                for i in range(len(self.sprites)):
+                    self.sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
+                    self.flipped_sprites[i] = pygame.transform.flip(self.sprites[i], True, False)
 
-        self.rotation = rotation
+            self.rotation = rotation
 
-        if not self.is_cheat:
+            if not self.is_cheat:
 
-            if keys[pygame.K_w] or keys[pygame.K_UP]:
-                self.is_jump = 5
-                self.gravity = 4 * self.up_or_down
-
-            if self.is_jump:
-                self.rect.y -= self.is_jump * 2 * self.up_or_down
-                self.is_jump -= 1
-
-                if self.is_jump == 4:
-                    self.image = self.sprites[1]
-
-                if self.is_jump == 3:
+                if keys[pygame.K_w] or keys[pygame.K_UP]:
+                    self.is_jump = 5
+                    self.gravity = 3 * self.up_or_down
                     self.image = self.sprites[2]
 
-                if self.is_jump == 1 or self.is_jump == 2:
-                    self.image = self.sprites[3]
+                if self.is_jump:
+                    self.rect.y -= self.is_jump * 2 * self.up_or_down
+                    self.is_jump -= 1
+                    self.image = self.sprites[1]
 
-            if not self.is_jump:
-                self.gravity = 5 * self.up_or_down
-                self.image = self.sprites[0]
+                if not self.is_jump:
+                    self.gravity = 5 * self.up_or_down
+                    self.image = self.sprites[0]
 
-            self.rect.y += self.gravity
+                self.rect.y += self.gravity
+
+            else:
+                if keys[pygame.K_UP]:
+                    self.rect.y -= 4
+                if keys[pygame.K_DOWN]:
+                    self.rect.y += 4
 
         else:
-            if keys[pygame.K_UP]:
-                self.rect.y -= 4
-            if keys[pygame.K_DOWN]:
-                self.rect.y += 4
+            self.gravity = 7
+            self.rect.y += self.gravity
 
     def shot(self, group):
         Piu(group=group, x=self.rect.x + 5, y=self.rect.y, rotation=self.rotation)
@@ -271,10 +272,6 @@ class Piu(pygame.sprite.Sprite):
         if self.rect.x > 500 or self.speed < -50:
             self.kill()
 
-        sprite = pygame.sprite.spritecollideany(self, enemies_group)
-        if sprite:
-            self.kill()
-
         enemies_piu = pygame.sprite.spritecollideany(self, enemy_piu_group)
         if enemies_piu:
             self.speed *= -1
@@ -322,7 +319,34 @@ class PiuingEnemy(pygame.sprite.Sprite):
         # self.image = self.image.convert_alpha()
         # pygame.draw.circle(self.image, MUSLIM_GREEN, (20, 20), 20)
 
-        self.image = load_image('enemy.png')
+        self.flying_sprites = [load_image('enemy/flying/0.png'),
+                               load_image('enemy/flying/1.png'),
+                               load_image('enemy/flying/2.png'),
+                               load_image('enemy/flying/3.png')]
+
+        self.death_sprites = [load_image('enemy/death/0.png'),
+                              load_image('enemy/death/1.png'),
+                              load_image('enemy/death/2.png'),
+                              load_image('enemy/death/3.png'),
+                              load_image('enemy/death/4.png'),
+                              load_image('enemy/death/5.png')]
+
+        self.attack_sprites = [load_image('enemy/attack/0.png'),
+                               load_image('enemy/attack/1.png'),
+                               load_image('enemy/attack/2.png'),
+                               load_image('enemy/attack/3.png'),
+                               load_image('enemy/attack/4.png'),
+                               load_image('enemy/attack/5.png'),
+                               load_image('enemy/attack/6.png'),
+                               load_image('enemy/attack/7.png')]
+
+        self.is_killed = False
+
+        self.kill_timer = 0
+
+        self.image = self.flying_sprites[0]
+
+        self.current_image = 0
 
         self.rect = self.image.get_rect()
 
@@ -333,6 +357,14 @@ class PiuingEnemy(pygame.sprite.Sprite):
         if rotation == 2:
             self.rect.x = 0
             self.rect.y = y
+            for i in range(len(self.flying_sprites)):
+                self.flying_sprites[i] = pygame.transform.flip(self.flying_sprites[i], True, False)
+
+            for i in range(len(self.death_sprites)):
+                self.death_sprites[i] = pygame.transform.flip(self.death_sprites[i], True, False)
+
+            for i in range(len(self.attack_sprites)):
+                self.attack_sprites[i] = pygame.transform.flip(self.attack_sprites[i], True, False)
 
         self.rotation = rotation
 
@@ -348,55 +380,78 @@ class PiuingEnemy(pygame.sprite.Sprite):
 
     def update(self, *args, **kwargs):
 
-        if self.rotation == 0:
-            if self.rect.x > 400:
-                self.rect.x -= 3
+        rotation = args[0]
 
-        if self.rotation == 2:
-            if self.rect.x < 60:
-                self.rect.x += 3
+        if not self.is_killed:
+            if self.rotation == 0:
+                if self.rect.x > 400:
+                    self.rect.x -= 3
 
-        if self.hp == 0:
-            self.kill()
+            if self.rotation == 2:
+                if self.rect.x < 30:
+                    self.rect.x += 3
 
-        if pygame.sprite.spritecollideany(self, piu_group):
-            self.hp -= 1
+            self.rotation = rotation
 
-        if self.new_y is None:
-            self.new_y = randrange(50, 450)
+            if self.hp == 0:
+                self.is_killed = True
 
-        elif self.new_y is not None:
-            if abs(self.new_y - self.rect.y) <= 5:
-                if self.wait_counter == 50:
-                    self.new_y = None
-                    self.wait_counter = 0
-                    self.piu_or_not = False
+            piu_group_collision = pygame.sprite.spritecollideany(self, piu_group)
+            if piu_group_collision:
+                self.hp -= 1
+                piu_group_collision.kill()
 
-                elif self.wait_counter == 25 and not self.piu_or_not:
-                    if self.rotation == 0:
-                        self.shot(self.rect.x, self.rect.y + 10)
+            if self.new_y is None:
+                self.new_y = randrange(50, 450)
 
-                    if self.rotation == 2:
-                        self.shot(self.rect.x + 35, self.rect.y + 10)
+            elif self.new_y is not None:
+                if abs(self.new_y - self.rect.y) <= 5:
 
-                    self.piu_or_not = True
+                    if self.wait_counter % 7 == 0:
+                        self.image = self.attack_sprites[self.wait_counter // 7]
 
+                    if self.wait_counter == 50:
+                        self.new_y = None
+                        self.wait_counter = 0
+                        self.piu_or_not = False
+
+                    elif self.wait_counter == 25 and not self.piu_or_not:
+                        if self.rotation == 0:
+                            self.shot(self.rect.x, self.rect.y + 35)
+
+                        if self.rotation == 2:
+                            self.shot(self.rect.x + 35, self.rect.y + 35)
+
+                        self.piu_or_not = True
+
+                    else:
+                        self.wait_counter += 1
                 else:
-                    self.wait_counter += 1
-            else:
-                if self.new_y > self.rect.y:
-                    self.rect.y += self.speed
-                else:
-                    self.rect.y -= self.speed
+                    if self.new_y > self.rect.y:
+                        self.rect.y += self.speed
+                    else:
+                        self.rect.y -= self.speed
+
+                    self.current_image += 1
+
+                    if self.current_image % 7:
+                        self.image = self.flying_sprites[self.current_image // 7]
+
+                    if self.current_image > 7 * 3:
+                        self.current_image = 0
+        else:
+            if self.kill_timer > 35:
+                self.kill()
+
+            if self.kill_timer % 7 == 0:
+                self.image = self.death_sprites[self.kill_timer // 7]
+
+            self.kill_timer += 1
 
     def shot(self, x, y):
         speed = 5
         if self.rotation == 2:
             speed = -5
-
-        if randrange(1, 101) % 3 == 0:
-            AddPatronsPiu(add_patrons_group, x, y, speed)
-            return
         EnemyPiu(enemy_piu_group, x, y, speed)
 
 
