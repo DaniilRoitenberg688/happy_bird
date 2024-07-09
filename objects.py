@@ -147,6 +147,8 @@ class Player(pygame.sprite.Sprite):
 
         self.current_image = 0
 
+        self.killed = False
+
     def update(self, *args, **kwargs):
         keys = args[0]
         rotation = args[1]
@@ -187,6 +189,9 @@ class Player(pygame.sprite.Sprite):
                     self.rect.y -= 4
                 if keys[pygame.K_DOWN]:
                     self.rect.y += 4
+        else:
+            self.gravity = 6
+            self.rect.y += self.gravity
 
     def shot(self, group):
         Piu(group=group, x=self.rect.x + 5, y=self.rect.y, rotation=self.rotation)

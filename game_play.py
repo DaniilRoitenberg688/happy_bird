@@ -52,8 +52,8 @@ def game_play():
     count_spaces = 0
     count_up_press = 0
 
-    how_much_to_click_up = randrange(20, 40)
-    how_much_to_click_space = randrange(5, 10)
+    how_much_to_click_up = randrange(10, 30)
+    how_much_to_click_space = randrange(2, 5)
 
     count_to_change_gravity = randrange(10, 20)
 
@@ -72,7 +72,6 @@ def game_play():
                 if event.type == pygame.KEYDOWN:
                     running = False
                     clear()
-
 
             if event.type == pygame.KEYDOWN:
 
@@ -116,8 +115,8 @@ def game_play():
             count_up_press = 0
             count_spaces = 0
 
-            how_much_to_click_up = randrange(20, 40)
-            how_much_to_click_space = randrange(10, 20)
+            how_much_to_click_up = randrange(10, 30)
+            how_much_to_click_space = randrange(2, 5)
 
             kill_everything()
             change_walls_direction()
@@ -135,7 +134,6 @@ def game_play():
 
         if player.hp <= 0:
             player.is_alive = False
-            show_end_table = True
 
         if is_piu_enemy and piu_enemy_life <= 100:
             piu_enemy_life += 1
@@ -205,21 +203,26 @@ def game_play():
             if points and points % 3 == 0:
                 player.patrons += 1
 
-        if not player.is_alive:
+        if player.rect.y >= 470 and not player.is_alive:
             show_end_table = True
+
+        if not player.is_alive and not player.killed:
+            player.image = pygame.transform.rotate(player.image, -90)
+            player.killed = True
 
         points_text = font_for_points.render(str(points), True, WHITE)
         patrons_text = font_for_patrons.render(str(player.patrons), True, WHITE)
 
         if not show_end_table:
-            tube_group.update()
             player_group.update(event_keys, now_rotation)
-            enemies_group.update(now_rotation)
-            health_enemies.update(piu_group)
-            piu_group.update()
-            enemy_piu_group.update(now_rotation)
-            add_patrons_group.update()
-            empty_tubes.update()
+            if player.is_alive:
+                tube_group.update()
+                enemies_group.update(now_rotation)
+                health_enemies.update(piu_group)
+                piu_group.update()
+                enemy_piu_group.update(now_rotation)
+                add_patrons_group.update()
+                empty_tubes.update()
 
         tube_group.draw(screen)
         player_group.draw(screen)
